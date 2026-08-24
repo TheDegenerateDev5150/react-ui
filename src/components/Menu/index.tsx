@@ -354,6 +354,16 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
       }
     };
 
+    // Утилита для поиска и установки активного элемента меню по его ID
+    const setMenuItemElement = (itemId: string) => {
+      const itemElement = scrollContainerRef.current?.querySelector(
+        `[data-menu-item-id="${itemId}"]`,
+      ) as HTMLElement | null;
+      if (itemElement) {
+        setActiveItemElement(itemElement);
+      }
+    };
+
     const { currentActiveMenu, activateMenu, deactivateMenu } = useDropdown(wrapperRef);
 
     useEffect(() => {
@@ -370,6 +380,7 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
               const currentItem = model.find((m) => m.id === currentId);
               if (subMenuTrigger === 'click' && currentItem?.subItems && currentItem.subItems.length > 0) {
                 setSubMenuState(currentId);
+                setMenuItemElement(currentId);
               } else {
                 handleClickItem(currentId);
               }
@@ -385,6 +396,7 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
               const currentItem = model.find((m) => m.id === currentId);
               if (subMenuTrigger === 'click' && currentItem?.subItems && currentItem.subItems.length > 0) {
                 setSubMenuState(currentId);
+                setMenuItemElement(currentId);
               } else {
                 handleClickItem(currentId);
               }
@@ -415,13 +427,13 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
           }
           case keyboardKey.ArrowRight:
           case keyboardKey.End: {
-            console.log(preselectedId, activeId);
             const currentId = preselectedModeActive ? (preselectedId ?? activeId) : activeId;
 
             if (currentId != null) {
               const item = model.find((item) => item.id === currentId);
               if (item && !item.disabled && !item.readOnly && item.subItems && !subMenuVisible) {
                 setSubMenuState(currentId);
+                setMenuItemElement(currentId);
               }
             }
 
@@ -489,12 +501,13 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
         hovered,
         preselected,
         selected,
+        'data-menu-item-id': id,
         onLeave: (e: MouseEvent<HTMLDivElement>) => {
           if (subMenuTrigger === 'hover') {
             const relTarget = e.relatedTarget;
             if (
               relTarget &&
-              Object.hasOwn(relTarget, 'nodeName') && // необходимо чтобы проверить действительно ли это Node
+              Object.hasOwn(relTarget, 'nodeName') &&
               !subMenuRef.current?.contains(relTarget as Node) &&
               !verticalScrollAriaRef.current?.contains(relTarget as Node)
             ) {
@@ -684,8 +697,6 @@ export const Menu = forwardRef<HTMLDivElement | null, MenuProps>(
       observer.observe(activeItemElement);
       return () => observer.disconnect();
     }, [activeItemElement]);
-
-    console.log(wrapperRef.current);
 
     return (
       <Wrapper
